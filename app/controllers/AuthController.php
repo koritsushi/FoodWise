@@ -130,7 +130,7 @@ class AuthController {
 			return;
 		}
 
-		$stmt = $conn->prepare("UPDATE users SET is_verified = 1, verification_token = NULL, verification_code = NULL, verification_expires = NULL WHERE user_id = :id");
+		$stmt = $conn->prepare("UPDATE users SET is_active = 1, is_verified = 1, verification_token = NULL, verification_code = NULL, verification_expires = NULL WHERE user_id = :id");
 		$stmt->execute(['id' => $user['user_id']]);
 
 		header('Location: /login?verified=1');
