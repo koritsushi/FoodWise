@@ -8,7 +8,7 @@ class HomeController {
 
 	public function dashboard() {
 		if (!isset($_SESSION['user_id'])) {
-			header('Location: http://localhost/FoodWise/public/login');
+			header('Location: /login');
 			exit;
 		}
 		include '../app/views/layout/header.php';

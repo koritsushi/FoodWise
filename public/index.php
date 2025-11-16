@@ -8,6 +8,7 @@ require_once '../config/db_connection.php';
 
 // Load controllers
 require_once '../app/controllers/HomeController.php';
+require_once '../app/controllers/DashboardController.php';
 require_once '../app/controllers/AuthController.php';
 require_once '../app/controllers/InventoryController.php';
 
@@ -19,8 +20,16 @@ require_once '../app/controllers/InventoryController.php';
 // Initialize router
 $router = new Router();
 
+// ---- DEBUG ONLY – REMOVE IN PRODUCTION ----
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
+ini_set('log_errors', 1);
+ini_set('error_log', __DIR__ . '/php_error.log');   // creates public/php_error.log
+// -------------------------------------------
+
 // Public Routes
-$router->add('#^/$#', [new HomeController(), 'index']);
+$router->add('#^/$#', [new DashboardController(), 'index']);
 $router->add('#^/register$#', [new AuthController(), 'register']);
 $router->add('#^/login$#', [new AuthController(), 'login']);
 $router->add('#^/logout$#', [new AuthController(), 'logout']);
@@ -32,8 +41,11 @@ $router->add('#^/verify-pending$#', function () {
     include '../app/views/layout/footer.php';
 });
 // Protected Routes
-$router->add('#^/dashboard$#', [new HomeController(), 'dashboard']);
+$router->add('#^/dashboard$#', [new DashboardController(), 'index']);
 $router->add('#^/inventory$#', [new InventoryController(), 'index']);
+$router->add('#^/inventory/add$#', [new InventoryController(), 'add']);
+$router->add('#^/inventory/edit/(\d+)$#', [new InventoryController(), 'edit']);
+$router->add('#^/inventory/delete/(\d+)$#', [new InventoryController(), 'delete']);
 
 // Parse and clean URI
 $uri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);

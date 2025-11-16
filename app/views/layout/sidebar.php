@@ -7,22 +7,25 @@
 
 		<nav class="nav flex-column mt-3">
 			<a href="/dashboard" class="nav-link">
-				<i class="fa fa-house"></i> Dashboard
+				<i class="fa fa-bar-chart"></i> Dashboard
 			</a>
 			<a href="/inventory" class="nav-link">
-				<i class="bi bi-box-seam"></i> Browse Food Items
+				<i class="fa fa-inbox"></i> Manage Food Items
+			</a>
+			<a href="/inventory" class="nav-link">
+				<i class="fa fa-inbox"></i> Browse Food Listing
 			</a>
 			<a href="/donations" class="nav-link">
-				<i class="bi bi-heart"></i> Donation Listing
+				<i class="fa fa-inbox"></i> Donation Listing
 			</a>
 			<a href="/meals" class="nav-link">
-				<i class="bi bi-calendar-week"></i> Plan Weekly Meals
+				<i class="fa fa-calendar"></i> Plan Weekly Meals
 			</a>
-			<a href="/account" class="nav-link">
-				<i class="bi bi-person-gear"></i> Account Setting
+			<a href="/notification" class="nav-link">
+				<i class="fa fa-bell"></i> Notification
 			</a>
 			<a href="/logout" class="nav-link">
-				<i class="bi bi-person-gear"></i> logout
+				<i class=""></i> logout
 			</a>
 		</nav>
 	</div>
