@@ -14,7 +14,10 @@ class Router {
             }
         }
         http_response_code(404);
-        echo "<h1>404 - Page Not Found</h1>";
+		include '../app/views/layout/header.php';
+		include '../app/views/layout/sidebar.php';
+		include '../app/views/error.php';
+		include '../app/views/layout/footer.php';
     }
 }
 ?>

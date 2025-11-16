@@ -16,7 +16,7 @@ CREATE TABLE Users (
 	phone_number VARCHAR(15),
 	address VARCHAR(150),
 	is_verified TINYINT(1) DEFAULT 0,
-	COLUMN verification_code VARCHAR(6) DEFAULT NULL,
+	verification_code VARCHAR(6) DEFAULT NULL,
 	verification_token VARCHAR(128) DEFAULT NULL,
 	verification_expires DATETIME DEFAULT NULL;
 	created_at DATETIME DEFAULT CURRENT_TIMESTAMP
