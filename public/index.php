@@ -11,6 +11,7 @@ require_once '../app/controllers/HomeController.php';
 require_once '../app/controllers/DashboardController.php';
 require_once '../app/controllers/AuthController.php';
 require_once '../app/controllers/InventoryController.php';
+require_once '../app/controllers/NotificationController.php';
 
 // Define BASE_URL if not already set
 // if (!defined('BASE_URL')) {
@@ -46,6 +47,7 @@ $router->add('#^/inventory$#', [new InventoryController(), 'index']);
 $router->add('#^/inventory/add$#', [new InventoryController(), 'add']);
 $router->add('#^/inventory/edit/(\d+)$#', [new InventoryController(), 'edit']);
 $router->add('#^/inventory/delete/(\d+)$#', [new InventoryController(), 'delete']);
+$router->add('#^/notification$#', [new NotificationController(), 'index']);
 
 // Parse and clean URI
 $uri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);

@@ -75,6 +75,51 @@
 		color: #bdc3c7;
 	}
 
+	.notifications-list { background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
+
+	.notification-item {
+		padding: 1rem 1.5rem;
+		border-bottom: 1px solid #eee;
+		display: flex;
+		align-items: flex-start;
+		gap: 1rem;
+		position: relative;
+		transition: background 0.2s;
+	}
+	.notification-item:hover { background: #f8f9fa; }
+	.notification-item.unread { background: #e3f2fd; font-weight: 500; }
+
+	.notif-icon {
+		font-size: 2rem;
+		width: 50px;
+		height: 50px;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+	}
+
+	.notif-content { flex: 1; }
+	.notif-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.4rem; }
+	.notif-time { color: #888; font-size: 0.9rem; }
+	.notif-message { color: #444; line-height: 1.5; }
+
+	.notif-unread-dot {
+		width: 10px;
+		height: 10px;
+		background: #1976d2;
+		border-radius: 50%;
+		position: absolute;
+		top: 1.5rem;
+		right: 1.5rem;
+	}
+
+	.empty-state {
+		text-align: center;
+		padding: 4rem 2rem;
+		color: #666;
+	}
+	.empty-state .icon { font-size: 4rem; margin-bottom: 1rem; }
+
 	/* Responsive Toggle */
 	@media (max-width: 768px) {
 		.sidebar {

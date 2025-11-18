@@ -108,11 +108,33 @@ class FoodModel {
 	public function getTotalFood(int $user_id): int
 	{
 		error_log("getTotalFood() called for user_id = $user_id");
+		// 1. Count total food
 		$sql = "SELECT COUNT(*) FROM Food WHERE user_id = :uid";
 		$stmt = $this->conn->prepare($sql);
 		$stmt->execute(['uid' => $user_id]);
 		$result = (int)$stmt->fetchColumn();
 		error_log("getTotalFood() RESULT = $result");
+
+		// 2. Check for near-expiry items (include food_id!)
+		$nearExpiry = $this->conn->prepare("
+			SELECT food_id, name, expiration_date 
+			FROM Food 
+			WHERE user_id = :uid 
+			AND is_expired = 0 
+			AND expiration_date BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL 3 DAY)
+		");
+		$nearExpiry->execute(['uid' => $user_id]);
+
+		foreach ($nearExpiry->fetchAll(PDO::FETCH_ASSOC) as $food) {
+			$this->createNotification(
+				user_id: $user_id,
+				title: "Expiring Soon",
+				message: $food['name'] . " expires on " . date('M j', strtotime($food['expiration_date'])),
+				type: "inventory",
+				reference_id: $food['food_id']  // ← NOW EXISTS!
+			);
+		}
+
 		return $result;
 	}
 
@@ -188,6 +210,77 @@ class FoodModel {
 		$donations = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 		return ['saved' => $saved, 'donations' => $donations];
+	}
+
+	// === NOTIFICATION HELPERS ===
+	public function createNotification(int $user_id, string $title, string $message, string $type = 'system', ?int $reference_id = null ): bool
+	{
+		$checkSql = "SELECT 1 FROM Notifications 
+                 WHERE user_id = :user_id 
+                   AND type = :type 
+                   AND (reference_id = :ref OR (reference_id IS NULL AND :ref IS NULL)) 
+                 LIMIT 1";
+		$check = $this->conn->prepare($checkSql);
+		$check->execute([
+			'user_id' => $user_id,
+			'type'    => $type,
+			'ref'     => $reference_id
+		]);
+		if ($check->fetch()) {
+			error_log("Notification already sent: type=$type, ref=$reference_id, user=$user_id");
+			return false; // Already sent
+		}
+		// Insert new notification
+		$sql = "INSERT INTO Notifications 
+				(user_id, title, message, type, reference_id, created_at) 
+				VALUES (:user_id, :title, :message, :type, :ref, NOW())";
+		$stmt = $this->conn->prepare($sql);
+		$success = $stmt->execute([
+			'user_id' => $user_id,
+			'title'   => $title,
+			'message' => $message,
+			'type'    => $type,
+			'ref'     => $reference_id
+		]);
+		if ($success) {
+			error_log("New notification sent: $title");
+		}
+		return $success;
+	}
+
+	public function getNotifications(int $user_id, int $limit = 10): array
+	{
+		$sql = "SELECT * FROM Notifications 
+				WHERE user_id = :user_id 
+				ORDER BY created_at DESC 
+				LIMIT :limit";
+		$stmt = $this->conn->prepare($sql);
+		$stmt->bindValue(':user_id', $user_id, PDO::PARAM_INT);
+		$stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
+		$stmt->execute();
+		return $stmt->fetchAll(PDO::FETCH_ASSOC);
+	}
+
+	public function getUnreadCount(int $user_id): int
+	{
+		$sql = "SELECT COUNT(*) FROM Notifications WHERE user_id = :user_id AND is_read = 0";
+		$stmt = $this->conn->prepare($sql);
+		$stmt->execute(['user_id' => $user_id]);
+		return (int)$stmt->fetchColumn();
+	}
+
+	public function markNotificationAsRead(int $notification_id, int $user_id): void
+	{
+		$sql = "UPDATE Notifications SET is_read = 1 WHERE notification_id = :id AND user_id = :user_id";
+		$stmt = $this->conn->prepare($sql);
+		$stmt->execute(['id' => $notification_id, 'user_id' => $user_id]);
+	}
+
+	public function markAllAsRead(int $user_id): void
+	{
+		$sql = "UPDATE Notifications SET is_read = 1 WHERE user_id = :uid AND is_read = 0";
+		$stmt = $this->conn->prepare($sql);
+		$stmt->execute(['uid' => $user_id]);
 	}
 }
 ?>

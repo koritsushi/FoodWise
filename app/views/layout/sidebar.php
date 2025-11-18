@@ -1,7 +1,7 @@
 <aside class="sidebar d-flex flex-column">
 	<div>
 		<div class="sidebar-header">
-			<img src="/assets/img/logo.png" alt="FoodWise Logo" width="50" height="50" class="mb-2">
+			<!-- <img src="/assets/img/logo.png" alt="FoodWise Logo" width="50" height="50" class="mb-2"> -->
 			<h3>FoodWise</h3>
 		</div>
 

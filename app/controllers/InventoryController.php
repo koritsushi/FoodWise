@@ -15,7 +15,7 @@ class InventoryController {
 		}
 
 		$foods = $this->foodModel->getAllFoodByUser($_SESSION['user_id']);
-
+		
 		include '../app/views/layout/header.php';
 		include '../app/views/layout/sidebar.php';
 		include '../app/views/inventory/index.php';

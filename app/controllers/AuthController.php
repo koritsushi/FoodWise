@@ -191,9 +191,7 @@ class AuthController {
 	}
 
     public function logout() {
-        session_start();
         session_destroy();
-
         // Redirect to login
         header('Location: /login');
         exit;
