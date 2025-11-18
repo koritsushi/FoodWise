@@ -1,23 +1,20 @@
 <div class="container content-wrap container-fluid p-5 d-flex flex-column align-items-center">
-	<?php 
-	$message = "";
-	$toastClass = "";
-	if ($message): 
-	?>
-		<div class="toast align-items-center text-white border-0" 
-	role="alert" aria-live="assertive" aria-atomic="true"
-			style="background-color: <?php echo $toastClass; ?>;">
-			<div class="d-flex">
-				<div class="toast-body">
-					<?php echo $message; ?>
-				</div>
-				<button type="button" class="btn-close
-				btn-close-white me-2 m-auto" 
-					data-bs-dismiss="toast"
-					aria-label="Close"></button>
-			</div>
-		</div>
-	<?php endif; ?>
+	<!-- Toast Error Message (only shows when register fails) -->
+    <?php if (!empty($errors)): ?>
+        <div class="toast align-items-center text-white bg-danger border-0 position-fixed" 
+             style="top: 20px; right: 20px; z-index: 9999;" 
+             role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="d-flex">
+				<?php foreach ($errors as $error): ?>
+					<div class="toast-body">
+						<?= htmlspecialchars($error) ?>
+					</div>
+					<button type="button" class="btn-close btn-close-white me-2 m-auto" 
+							data-bs-dismiss="toast" aria-label="Close"></button>
+				<?php endforeach; ?>
+            </div>
+        </div>
+    <?php endif; ?>
 	<form method="POST" class="form-control mt-5 p-4"
 		style="height:auto; width:380px;
 		box-shadow: rgba(60, 64, 67, 0.3) 0px 1px 2px 0px,

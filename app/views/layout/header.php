@@ -120,6 +120,14 @@
 	}
 	.empty-state .icon { font-size: 4rem; margin-bottom: 1rem; }
 
+	.is-invalid {
+    border-color: #dc3545 !important;
+    box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25);
+	}
+	.text-danger i {
+		margin-right: 4px;
+	}
+
 	/* Responsive Toggle */
 	@media (max-width: 768px) {
 		.sidebar {
