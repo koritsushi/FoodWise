@@ -19,6 +19,10 @@ class DashboardController
         }
         $userId = (int)$_SESSION['user_id'];
         // 2. Initialize all variables (prevents undefined warnings)
+		$dateFrom = $_GET['date_from'] ?? null;
+        $dateTo   = $_GET['date_to']   ?? null;
+        if ($dateFrom && !preg_match('/^\d{4}-\d{2}-\d{2}$/', $dateFrom)) $dateFrom = null;
+        if ($dateTo   && !preg_match('/^\d{4}-\d{2}-\d{2}$/', $dateTo))   $dateTo   = null;
         $totalFood          = 0;
         $expiredFood        = 0;
         $foodInMeals        = 0;
@@ -53,7 +57,8 @@ class DashboardController
             $debug("foodSaved = $foodSaved");
 
             // Monthly analytics
-            $monthly = $this->foodModel->getMonthlyAnalytics($userId) ?? ['saved' => [], 'donations' => []];
+            $monthly = $this->foodModel->getMonthlyAnalytics($userId, $dateFrom, $dateTo) 
+                       ?? ['saved' => [], 'donations' => []];
 			
             foreach ($monthly['saved'] as $row) {
                 $months[] = $row['month'];
@@ -84,7 +89,8 @@ class DashboardController
 
         $data = compact(
             'totalFood', 'expiredFood', 'foodInMeals', 'completedDonations',
-            'foodSaved', 'months', 'savedCounts', 'donationCounts', 'foodAddedCounts'
+            'foodSaved', 'months', 'savedCounts', 'donationCounts', 'foodAddedCounts',
+			'dateFrom', 'dateTo'
         );
 
         include '../app/views/layout/header.php';

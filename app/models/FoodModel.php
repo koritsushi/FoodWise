@@ -43,20 +43,87 @@ class FoodModel {
 		]);
 	}
 
-	public function getMonthlyFoodAdded(int $user_id): array
+	public function getMonthlyFoodAdded(int $user_id, ?string $dateFrom = null, ?string $dateTo = null): array
 	{
-		error_log("getMonthlyFoodAdded() called for user_id = $user_id");
 		$sql = "
 			SELECT DATE_FORMAT(created_at, '%Y-%m') AS month, COUNT(*) AS added
 			FROM Food
 			WHERE user_id = :uid
+		";
+		$params = ['uid' => $user_id];
+
+		if ($dateFrom) {
+			$sql .= " AND created_at >= :from";
+			$params['from'] = $dateFrom . ' 00:00:00';
+		}
+		if ($dateTo) {
+			$sql .= " AND created_at <= :to";
+			$params['to'] = $dateTo . ' 23:59:59';
+		}
+
+		$sql .= " GROUP BY month ORDER BY month ASC LIMIT 12";
+
+		$stmt = $this->conn->prepare($sql);
+		$stmt->execute($params);
+		return $stmt->fetchAll(PDO::FETCH_ASSOC);
+	}
+
+	public function getMonthlyAnalytics(int $user_id, ?string $dateFrom = null, ?string $dateTo = null): array
+	{
+		$params = ['uid' => $user_id];
+		$dateFilter = "";
+
+		if ($dateFrom) {
+			$dateFilter .= " AND f.created_at >= :from";
+			$params['from'] = $dateFrom . ' 00:00:00';
+		}
+		if ($dateTo) {
+			$dateFilter .= " AND f.created_at <= :to";
+			$params['to'] = $dateTo . ' 23:59:59';
+		}
+
+		$savedSql = "
+			SELECT DATE_FORMAT(f.created_at, '%Y-%m') AS month,
+				COUNT(DISTINCT CASE WHEN mpi.food_id IS NOT NULL THEN f.food_id END) +
+				COUNT(DISTINCT CASE WHEN d.status = 'completed' THEN d.food_id END) AS saved
+			FROM Food f
+			LEFT JOIN MealPlanItems mpi ON f.food_id = mpi.food_id
+			LEFT JOIN Donation d ON f.food_id = d.food_id
+			WHERE f.user_id = :uid
+			$dateFilter
 			GROUP BY month
-			ORDER BY month DESC
+			ORDER BY month ASC
 			LIMIT 12
 		";
-		$stmt = $this->conn->prepare($sql);
-		$stmt->execute(['uid' => $user_id]);
-		return $stmt->fetchAll(PDO::FETCH_ASSOC);
+		$stmt = $this->conn->prepare($savedSql);
+		$stmt->execute($params);
+		$saved = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+		$donParams = ['uid' => $user_id];
+		$donFilter = "";
+		if ($dateFrom) {
+			$donFilter .= " AND created_at >= :from";
+			$donParams['from'] = $dateFrom . ' 00:00:00';
+		}
+		if ($dateTo) {
+			$donFilter .= " AND created_at <= :to";
+			$donParams['to'] = $dateTo . ' 23:59:59';
+		}
+
+		$donSql = "
+			SELECT DATE_FORMAT(created_at, '%Y-%m') AS month, COUNT(*) AS donations
+			FROM Donation
+			WHERE user_id = :uid AND status = 'completed'
+			$donFilter
+			GROUP BY month
+			ORDER BY month ASC
+			LIMIT 12
+		";
+		$stmt = $this->conn->prepare($donSql);
+		$stmt->execute($donParams);
+		$donations = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+		return ['saved' => $saved, 'donations' => $donations];
 	}
 
     public function updateFood($food_id, $data) {
@@ -190,41 +257,6 @@ class FoodModel {
 		$result = (int)$stmt->fetchColumn();
 		error_log("getCompletedDonations() RESULT = $result");
 		return $result;
-	}
-
-	public function getMonthlyAnalytics(int $user_id): array
-	{
-		error_log("getMonthlyAnalytics() called for user_id = $user_id");
-
-		$savedSql = "
-			SELECT DATE_FORMAT(f.created_at, '%Y-%m') AS month,
-				COUNT(DISTINCT CASE WHEN mpi.food_id IS NOT NULL THEN f.food_id END) +
-				COUNT(DISTINCT CASE WHEN d.status = 'completed' THEN d.food_id END) AS saved
-			FROM Food f
-			LEFT JOIN MealPlanItems mpi ON f.food_id = mpi.food_id
-			LEFT JOIN Donation d ON f.food_id = d.food_id
-			WHERE f.user_id = :uid
-			GROUP BY month
-			ORDER BY month DESC
-			LIMIT 12
-		";
-		$stmt = $this->conn->prepare($savedSql);
-		$stmt->execute(['uid' => $user_id]);
-		$saved = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-		$donSql = "
-			SELECT DATE_FORMAT(created_at, '%Y-%m') AS month, COUNT(*) AS donations
-			FROM Donation
-			WHERE user_id = :uid AND status = 'completed'
-			GROUP BY month
-			ORDER BY month DESC
-			LIMIT 12
-		";
-		$stmt = $this->conn->prepare($donSql);
-		$stmt->execute(['uid' => $user_id]);
-		$donations = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-		return ['saved' => $saved, 'donations' => $donations];
 	}
 
 	// === NOTIFICATION HELPERS ===

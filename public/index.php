@@ -42,6 +42,8 @@ $router->add('#^/verify-pending$#', function () {
     include '../app/views/layout/footer.php';
 });
 $router->add('#^/verify-2fa$#', [new AuthController(), 'verify2FA']);
+$router->add('#^/resend-2fa$#', [new AuthController(), 'resend2FA']);
+
 // Protected Routes
 $router->add('#^/dashboard$#', [new DashboardController(), 'index']);
 $router->add('#^/inventory$#', [new InventoryController(), 'index']);

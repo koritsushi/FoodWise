@@ -21,7 +21,9 @@
 						$savedCounts        ??= [];
 						$donationCounts     ??= [];
 						$foodAddedCounts	??= [];
-
+						$dateFrom           ??= '';
+                    	$dateTo             ??= '';
+						
 						?>
 						<script>
 							console.log("DASHBOARD DEBUG START");
@@ -38,7 +40,41 @@
 							<p><strong>Expired:</strong> <?= $expiredFood ?></p>
 						</div>
 
-						<h2>Monthly Trends</h2>
+						 <!-- Date Filter Form -->
+						<form method="GET" action="/dashboard" class="row g-2 align-items-end mb-4">
+							<div class="col-sm-5">
+								<label class="form-label fw-semibold mb-1">From</label>
+								<input
+									type="date"
+									name="date_from"
+									class="form-control"
+									value="<?= htmlspecialchars($dateFrom) ?>"
+								>
+							</div>
+							<div class="col-sm-5">
+								<label class="form-label fw-semibold mb-1">To</label>
+								<input
+									type="date"
+									name="date_to"
+									class="form-control"
+									value="<?= htmlspecialchars($dateTo) ?>"
+								>
+							</div>
+							<div class="col-sm-2 d-flex gap-1">
+								<button type="submit" class="btn btn-success w-100">Filter</button>
+								<a href="/dashboard" class="btn btn-outline-secondary w-100">Reset</a>
+							</div>
+						</form>
+
+						<?php if ($dateFrom || $dateTo): ?>
+							<p class="text-muted small mb-3">
+								Showing data
+								<?= $dateFrom ? 'from <strong>' . htmlspecialchars($dateFrom) . '</strong> ' : '' ?>
+								<?= $dateTo   ? 'to <strong>'   . htmlspecialchars($dateTo)   . '</strong>' : '' ?>
+							</p>
+						<?php endif; ?>
+
+						<h2>Trends</h2>
 						<?php if (!empty($months)): ?>
 							<canvas id="monthlyChart" style="width:600px; height: 400px; margin:auto;"></canvas>
 						<?php else: ?>
