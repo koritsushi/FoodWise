@@ -98,12 +98,11 @@ CREATE TABLE Notifications (
 	title VARCHAR(100),
 	message VARCHAR(255),
 	type ENUM('inventory', 'donation', 'meal', 'system') DEFAULT 'system',
+    reference_id INT NULL,
 	is_read BOOLEAN DEFAULT FALSE,
 	created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-	FOREIGN KEY (user_id) REFERENCES Users(user_id) ON DELETE CASCADE
+	FOREIGN KEY (user_id) REFERENCES Users(user_id) ON DELETE CASCADE,
     UNIQUE KEY uniq_user_type_ref (user_id, type, reference_id),
     INDEX idx_notifications_user (user_id),
     INDEX idx_notifications_created (created_at)
 );
-
-CREATE INDEX idx_notifications_user ON Notifications(user_id);
