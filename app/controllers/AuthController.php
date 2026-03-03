@@ -278,6 +278,38 @@ class AuthController {
 		include '../app/views/layout/footer.php';
 	}
 
+	public function resend2FA() {
+		global $conn;
+
+		// Guard: must have come from login step
+		if (!isset($_SESSION['2fa_user_id'])) {
+			header('Location: /login');
+			exit;
+		}
+
+		$userId = (int)$_SESSION['2fa_user_id'];
+
+		$stmt = $conn->prepare("SELECT email, name FROM users WHERE user_id = :id");
+		$stmt->execute(['id' => $userId]);
+		$user = $stmt->fetch(PDO::FETCH_ASSOC);
+
+		if ($user) {
+			$code       = str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
+			$expires_at = (new DateTime('+10 minutes'))->format('Y-m-d H:i:s');
+
+			$stmt = $conn->prepare("UPDATE users SET two_fa_code = :code, two_fa_expires = :exp WHERE user_id = :id");
+			$stmt->execute(['code' => $code, 'exp' => $expires_at, 'id' => $userId]);
+
+			$this->send2FAEmail($user['email'], $user['name'], $code);
+
+			header('Location: /verify-2fa?resent=1');
+			exit;
+		}
+
+		header('Location: /login');
+		exit;
+	}
+
 	private function send2FAEmail($toEmail, $toName, $code) {
 		$mail = new PHPMailer(true);
 		try {

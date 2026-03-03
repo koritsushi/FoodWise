@@ -29,6 +29,13 @@
                         </div>
                     </form>
 
+					<!-- Resend button with cooldown -->
+                    <div class="d-grid mb-3">
+                        <button id="resendBtn" class="btn btn-outline-secondary" onclick="resendCode()">
+                            Resend Code (<span id="countdown">30</span>s)
+                        </button>
+                    </div>
+
                     <div class="text-center mt-3">
                         <a href="/login" class="text-muted small">← Back to login</a>
                     </div>
@@ -37,3 +44,26 @@
         </div>
     </div>
 </div>
+
+<script>
+    // 30-second cooldown to prevent spam
+    let seconds = 30;
+    const btn = document.getElementById('resendBtn');
+    const countdown = document.getElementById('countdown');
+
+    btn.disabled = true;
+
+    const timer = setInterval(() => {
+        seconds--;
+        countdown.textContent = seconds;
+        if (seconds <= 0) {
+            clearInterval(timer);
+            btn.disabled = false;
+            btn.textContent = 'Resend Code';
+        }
+    }, 1000);
+
+    function resendCode() {
+        window.location.href = '/resend-2fa';
+    }
+</script>
