@@ -41,6 +41,7 @@ $router->add('#^/verify-pending$#', function () {
     echo '<div class="container mt-5 text-center"><h3>Please check your email for a verification link or code.</h3></div>';
     include '../app/views/layout/footer.php';
 });
+$router->add('#^/verify-2fa$#', [new AuthController(), 'verify2FA']);
 // Protected Routes
 $router->add('#^/dashboard$#', [new DashboardController(), 'index']);
 $router->add('#^/inventory$#', [new InventoryController(), 'index']);

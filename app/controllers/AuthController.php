@@ -163,12 +163,43 @@ class AuthController {
 		include '../app/views/layout/footer.php';
 	}
 
+	// public function login() {
+	// 	global $conn;
+	// 	$error = "";
+
+	// 	if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+	// 		$email = trim($_POST['email']);
+	// 		$password = $_POST['password'];
+
+	// 		if (empty($email) || empty($password)) {
+	// 			$error = "Please fill in all fields.";
+	// 		} else {
+	// 			$stmt = $conn->prepare("SELECT * FROM users WHERE email = :email");
+	// 			$stmt->execute(['email' => $email]);
+	// 			$user = $stmt->fetch(PDO::FETCH_ASSOC);
+
+	// 			if ($user && password_verify($password, $user['password'])) {
+	// 				$_SESSION['user_id'] = $user['user_id'];
+	// 				$_SESSION['name'] = $user['name'];
+	// 				header('Location: /dashboard');
+	// 				exit;
+	// 			} else {
+	// 				$error = "Invalid email or password.";
+	// 			}
+	// 		}
+    // 	}
+
+	// 	include '../app/views/layout/header.php';
+	// 	include '../app/views/login.php';
+	// 	include '../app/views/layout/footer.php';
+	// }
+
 	public function login() {
 		global $conn;
 		$error = "";
 
 		if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-			$email = trim($_POST['email']);
+			$email    = trim($_POST['email']);
 			$password = $_POST['password'];
 
 			if (empty($email) || empty($password)) {
@@ -179,19 +210,102 @@ class AuthController {
 				$user = $stmt->fetch(PDO::FETCH_ASSOC);
 
 				if ($user && password_verify($password, $user['password'])) {
-					$_SESSION['user_id'] = $user['user_id'];
-					$_SESSION['name'] = $user['name'];
-					header('Location: /dashboard');
+					//Password correct — generate 2FA code
+					$code       = str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
+					$expires_at = (new DateTime('+10 minutes'))->format('Y-m-d H:i:s');
+
+					$stmt = $conn->prepare("UPDATE users SET two_fa_code = :code, two_fa_expires = :exp WHERE user_id = :id");
+					$stmt->execute(['code' => $code, 'exp' => $expires_at, 'id' => $user['user_id']]);
+
+					// Store user_id in session temporarily (not fully logged in yet)
+					$_SESSION['2fa_user_id'] = $user['user_id'];
+
+					// Send code to email
+					$this->send2FAEmail($user['email'], $user['name'], $code);
+
+					header('Location: /verify-2fa');
 					exit;
 				} else {
 					$error = "Invalid email or password.";
 				}
 			}
-    	}
+		}
 
 		include '../app/views/layout/header.php';
 		include '../app/views/login.php';
 		include '../app/views/layout/footer.php';
+	}
+
+	public function verify2FA() {
+		global $conn;
+		$error = "";
+
+		// Guard: must have come from login step
+		if (!isset($_SESSION['2fa_user_id'])) {
+			header('Location: /login');
+			exit;
+		}
+
+		if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+			$code   = trim($_POST['code'] ?? '');
+			$userId = (int)$_SESSION['2fa_user_id'];
+
+			$stmt = $conn->prepare("SELECT name, two_fa_code, two_fa_expires FROM users WHERE user_id = :id");
+			$stmt->execute(['id' => $userId]);
+			$user = $stmt->fetch(PDO::FETCH_ASSOC);
+
+			if (!$user || $user['two_fa_code'] !== $code) {
+				$error = "Invalid code. Please try again.";
+			} elseif (new DateTime() > new DateTime($user['two_fa_expires'])) {
+				$error = "Code expired. Please log in again.";
+				unset($_SESSION['2fa_user_id']);
+			} else {
+				// 2FA passed — clear code and fully log in
+				$stmt = $conn->prepare("UPDATE users SET two_fa_code = NULL, two_fa_expires = NULL WHERE user_id = :id");
+				$stmt->execute(['id' => $userId]);
+
+				unset($_SESSION['2fa_user_id']);
+				$_SESSION['user_id'] = $userId;
+				$_SESSION['name']    = $user['name'];
+
+				header('Location: /dashboard');
+				exit;
+			}
+		}
+
+		include '../app/views/layout/header.php';
+		include '../app/views/verify_2fa.php';
+		include '../app/views/layout/footer.php';
+	}
+
+	private function send2FAEmail($toEmail, $toName, $code) {
+		$mail = new PHPMailer(true);
+		try {
+			$mail->isSMTP();
+			$mail->Host       = 'smtp.gmail.com';
+			$mail->SMTPAuth   = true;
+			$mail->Username   = getenv('SMTP_USER');
+			$mail->Password   = getenv('SMTP_PASS');
+			$mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
+			$mail->Port       = 587;
+
+			$mail->setFrom(getenv('SMTP_USER'), 'FoodWise');
+			$mail->addAddress($toEmail, $toName);
+			$mail->isHTML(true);
+			$mail->Subject = 'Your FoodWise login code';
+			$mail->Body    = "
+				<h2>Hi {$toName},</h2>
+				<p>Your login verification code is:</p>
+				<h1 style='letter-spacing:8px;color:#28a745;'>{$code}</h1>
+				<p>This code expires in <strong>10 minutes</strong>.</p>
+				<p>If you didn't try to log in, please ignore this email.</p>
+				<p>— The FoodWise Team</p>
+			";
+			$mail->AltBody = "Your FoodWise login code is: {$code}. Expires in 10 minutes.";
+			$mail->send();
+		} catch (Exception $e) {
+			error_log('2FA mail error: ' . $mail->ErrorInfo);
+		}
 	}
 
     public function logout() {

@@ -20,6 +20,8 @@ CREATE TABLE Users (
 	verification_code VARCHAR(6) DEFAULT NULL,
 	verification_token VARCHAR(128) DEFAULT NULL,
 	verification_expires DATETIME DEFAULT NULL,
+	two_fa_code          VARCHAR(6) DEFAULT NULL,
+    two_fa_expires       DATETIME DEFAULT NULL,  
 	created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 

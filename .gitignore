@@ -1,2 +1,4 @@
 vendor
 composer.*
+old
+public/php_error.log

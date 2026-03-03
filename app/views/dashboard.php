@@ -1,4 +1,4 @@
-<div class="container mt-5">
+<div class="container-fluid mt-4">
 	<div class="row justify-content-center">
 		<div class="col-md-8 col-lg-6">
 			<div class="card shadow-lg border-0 rounded-4">
@@ -20,12 +20,15 @@
 						$months             ??= [];
 						$savedCounts        ??= [];
 						$donationCounts     ??= [];
+						$foodAddedCounts	??= [];
+
 						?>
 						<script>
 							console.log("DASHBOARD DEBUG START");
 							console.log("User ID:", <?= json_encode($_SESSION['user_id']) ?>);
 							console.log("Total Food:", <?= $totalFood ?>);
 							console.log("Months:", <?= json_encode($months) ?>);
+							console.log("foodAddedCounts:", <?= json_encode($foodAddedCounts) ?>);
 							console.log("DASHBOARD DEBUG END");
 						</script>
 						<div class="stats">
@@ -37,7 +40,7 @@
 
 						<h2>Monthly Trends</h2>
 						<?php if (!empty($months)): ?>
-							<canvas id="monthlyChart" style="max-width:900px;margin:auto;"></canvas>
+							<canvas id="monthlyChart" style="width:600px; height: 400px; margin:auto;"></canvas>
 						<?php else: ?>
 							<p>No data available for the chart.</p>
 						<?php endif; ?>
@@ -64,6 +67,14 @@
 											data: <?= json_encode($donationCounts) ?>,
 											borderColor: '#9c27b0',
 											backgroundColor: 'rgba(156,39,176,0.1)',
+											fill: true,
+											tension: 0.3
+										},
+										{
+											label: 'Total Food Added',
+											data: <?= json_encode($foodAddedCounts) ?>,
+											borderColor: '#2196f3',
+											backgroundColor: 'rgba(33, 150, 243, 0.6)',
 											fill: true,
 											tension: 0.3
 										}

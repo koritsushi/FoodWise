@@ -43,6 +43,21 @@ class FoodModel {
 		]);
 	}
 
+	public function getMonthlyFoodAdded(int $user_id): array
+	{
+		error_log("getMonthlyFoodAdded() called for user_id = $user_id");
+		$sql = "
+			SELECT DATE_FORMAT(created_at, '%Y-%m') AS month, COUNT(*) AS added
+			FROM Food
+			WHERE user_id = :uid
+			GROUP BY month
+			ORDER BY month DESC
+			LIMIT 12
+		";
+		$stmt = $this->conn->prepare($sql);
+		$stmt->execute(['uid' => $user_id]);
+		return $stmt->fetchAll(PDO::FETCH_ASSOC);
+	}
 
     public function updateFood($food_id, $data) {
         $stmt = $this->conn->prepare("

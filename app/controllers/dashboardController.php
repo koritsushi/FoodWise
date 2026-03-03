@@ -27,6 +27,7 @@ class DashboardController
         $months             = [];
         $savedCounts        = [];
         $donationCounts     = [];
+		$foodAddedCounts = [];
 
        $debug = function ($msg) {
             error_log($msg);
@@ -53,7 +54,7 @@ class DashboardController
 
             // Monthly analytics
             $monthly = $this->foodModel->getMonthlyAnalytics($userId) ?? ['saved' => [], 'donations' => []];
-
+			
             foreach ($monthly['saved'] as $row) {
                 $months[] = $row['month'];
                 $savedCounts[] = (int)$row['saved'];
@@ -70,13 +71,20 @@ class DashboardController
 
             $debug("Monthly data loaded: " . count($months) . " months");
 
+			$foodAddedMonthly = $this->foodModel->getMonthlyFoodAdded($userId);
+			$addedMap = array_column($foodAddedMonthly, 'added', 'month');
+			foreach ($months as $m) {
+				$foodAddedCounts[] = (int)($addedMap[$m] ?? 0);
+			}
+			$debug("getMonthlyFoodAdded() -> " . json_encode($foodAddedCounts));
+
         } catch (Throwable $e) {
             $debug("ERROR: " . $e->getMessage());
         }
 
         $data = compact(
             'totalFood', 'expiredFood', 'foodInMeals', 'completedDonations',
-            'foodSaved', 'months', 'savedCounts', 'donationCounts'
+            'foodSaved', 'months', 'savedCounts', 'donationCounts', 'foodAddedCounts'
         );
 
         include '../app/views/layout/header.php';
